@@ -12,7 +12,7 @@ func receiveEvents(num int, urlInput <-chan string, tester Pinger, storage Stora
 					continue
 				}
 
-				storage.LoadStatus(url, res)
+				storage.StoreStatus(url, res)
 			}
 		}()
 	}
