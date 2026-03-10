@@ -45,6 +45,8 @@ func retrieveXAndCheckOrder(t *testing.T, h heap.Heap[int, string], arr *[]int, 
 }
 
 func TestOrder(t *testing.T) {
+	t.Parallel()
+
 	beg, batch, times := 10, 5, 20
 
 	var arr []int
@@ -64,6 +66,8 @@ func TestOrder(t *testing.T) {
 }
 
 func TestPopTopEquality(t *testing.T) {
+	t.Parallel()
+
 	sz := 10
 
 	var arr []int
@@ -89,6 +93,8 @@ func TestPopTopEquality(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
+	t.Parallel()
+
 	sz := 10
 	var arr []int
 	h := getHeap()
@@ -111,6 +117,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
+	t.Parallel()
+
 	sz := 10
 	var arr []int
 	h := getHeap()
@@ -136,6 +144,8 @@ func TestRemove(t *testing.T) {
 }
 
 func TestLen(t *testing.T) {
+	t.Parallel()
+
 	sz := 10
 	var arr []int
 	h := getHeap()

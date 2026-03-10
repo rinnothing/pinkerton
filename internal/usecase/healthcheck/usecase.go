@@ -47,6 +47,7 @@ func New(ctx context.Context, initModels []model.Target, threads int, tester Pin
 	}
 
 	for _, model := range initModels {
+		impl.st.AddParams(model.URL, model.Period)
 		impl.em.AddEvent(constructTimeAndPeriod(model.Period), model.URL)
 	}
 
