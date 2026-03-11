@@ -3,6 +3,7 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,8 +25,32 @@ func (p *constantPinger) Ping(url string) (int, error) {
 	return p.code, p.err
 }
 
-func newHealthcheck(initModels []model.Target, pinger healthcheck.Pinger) healthcheck.Usecase {
-	return healthcheck.New(context.Background(), initModels, num_threads, pinger, storage.New())
+type storageNotifier struct {
+	healthcheck.Storage
+	once   *sync.Once
+	notify chan struct{}
+}
+
+func (sn *storageNotifier) StoreStatus(url string, status int) {
+	sn.Storage.StoreStatus(url, status)
+
+	sn.once.Do(func() {
+		close(sn.notify)
+	})
+}
+
+func newStorageNotifier() *storageNotifier {
+	return &storageNotifier{
+		storage.New(),
+		new(sync.Once),
+		make(chan struct{}),
+	}
+}
+
+func newHealthcheck(initModels []model.Target, pinger healthcheck.Pinger) (healthcheck.Usecase, chan struct{}) {
+	sn := newStorageNotifier()
+
+	return healthcheck.New(context.Background(), initModels, num_threads, pinger, sn), sn.notify
 }
 
 var targets = []model.Target{
@@ -36,7 +61,7 @@ var targets = []model.Target{
 func TestInitialModels(t *testing.T) {
 	t.Parallel()
 
-	e := newHealthcheck(targets, &constantPinger{code: 200})
+	e, _ := newHealthcheck(targets, &constantPinger{code: 200})
 
 	for _, trg := range targets {
 		resTrg, err := e.GetTarget(trg.URL)
@@ -57,7 +82,7 @@ func TestInitialModels(t *testing.T) {
 func TestAddTarget(t *testing.T) {
 	t.Parallel()
 
-	e := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
+	e, _ := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
 
 	err := e.AddTarget(&targets[0])
 	if err != nil {
@@ -91,7 +116,7 @@ func TestAddTarget(t *testing.T) {
 func TestUpdateTarget(t *testing.T) {
 	t.Parallel()
 
-	e := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
+	e, _ := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
 
 	err := e.AddTarget(&targets[0])
 	if err != nil {
@@ -125,7 +150,7 @@ func TestUpdateTarget(t *testing.T) {
 func TestRemoveTarget(t *testing.T) {
 	t.Parallel()
 
-	e := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
+	e, _ := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
 
 	err := e.AddTarget(&targets[0])
 	if err != nil {
@@ -148,30 +173,32 @@ func TestRemoveTarget(t *testing.T) {
 	}
 }
 
-// func TestCodes(t *testing.T) {
-// 	errCode := 404
-// 	e := newHealthcheck([]model.Target{}, &constantPinger{code: errCode})
+func TestCodes(t *testing.T) {
+	t.Parallel()
 
-// 	cpTgt := targets[0]
-// 	cpTgt.Period = 0
-// 	err := e.AddTarget(&cpTgt)
-// 	if err != nil {
-// 		t.Fatalf("adding new target shouldn't result in error %s", err)
-// 	}
+	errCode := 404
+	e, notify := newHealthcheck([]model.Target{}, &constantPinger{code: errCode})
 
-// 	time.Sleep(time.Millisecond * 20)
+	err := e.AddTarget(&targets[0])
+	if err != nil {
+		t.Fatalf("adding new target shouldn't result in error %s", err)
+	}
 
-// 	trg, err := e.GetTarget(targets[0].URL)
-// 	if err != nil {
-// 		t.Fatalf("quering existing target shouldn't result in error %s", err)
-// 	}
+	t.Log("started sleep")
+	<-notify
+	t.Log("ended sleep")
 
-// 	nw := time.Now()
-// 	if trg.LastResponse.After(nw) {
-// 		t.Fatalf("seem to get last response in future %s (now is %s)", trg.LastResponse, nw)
-// 	}
+	trg, err := e.GetTarget(targets[0].URL)
+	if err != nil {
+		t.Fatalf("quering existing target shouldn't result in error %s", err)
+	}
 
-// 	if trg.LastStatus != errCode {
-// 		t.Fatalf("response seem to not update, should be %d, but is %d", errCode, trg.LastStatus)
-// 	}
-// }
+	nw := time.Now()
+	if trg.LastResponse.After(nw) {
+		t.Fatalf("seem to get last response in future %s (now is %s)", trg.LastResponse, nw)
+	}
+
+	if trg.LastStatus != errCode {
+		t.Fatalf("response seem to not update, should be %d, but is %d", errCode, trg.LastStatus)
+	}
+}
