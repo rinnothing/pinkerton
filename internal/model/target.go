@@ -5,8 +5,8 @@ import (
 )
 
 type Target struct {
-	URL          string
-	LastStatus   int
-	LastResponse time.Time
-	Period       time.Duration
+	URL          string        `json:"url"`
+	LastStatus   int           `json:"last_status"`
+	LastResponse time.Time     `json:"last_response"`
+	Period       time.Duration `json:"period"`
 }

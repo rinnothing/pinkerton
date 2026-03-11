@@ -8,7 +8,7 @@ func receiveEvents(num int, urlInput <-chan string, tester Pinger, storage Stora
 			for url := range urlInput {
 				res, err := tester.Ping(url)
 				if err != nil {
-					slog.Error("error pinging url %s: %s", url, err)
+					slog.Error("error pinging url", "url", url, "error", err)
 					continue
 				}
 

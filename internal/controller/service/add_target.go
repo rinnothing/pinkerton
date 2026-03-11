@@ -1,0 +1,43 @@
+package service
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/rinnothing/pinkerton/internal/model"
+)
+
+type targetRequest struct {
+	URL    string        `json:"url"`
+	Period time.Duration `json:"period"`
+}
+
+func (ctr *controller) AddTarget(resp http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
+	dec := json.NewDecoder(req.Body)
+	dec.DisallowUnknownFields()
+
+	var tgtReq targetRequest
+	err := dec.Decode(&tgtReq)
+	if err != nil {
+		badRequest(resp, "can't decode request")
+		return
+	}
+
+	err = ctr.uc.AddTarget(&model.Target{URL: tgtReq.URL, Period: tgtReq.Period})
+	if errors.Is(err, model.ErrUrlExists) {
+		statusConflict(resp, fmt.Sprintf("target with url %s already exists", tgtReq.URL))
+		return
+	} else if err != nil {
+		slog.Error("error adding target", "target", tgtReq, "error", err)
+		internalError(resp)
+		return
+	}
+
+	statusOK(resp)
+}
