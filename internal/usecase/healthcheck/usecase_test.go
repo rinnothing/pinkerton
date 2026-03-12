@@ -50,7 +50,11 @@ func newStorageNotifier() *storageNotifier {
 func newHealthcheck(initModels []model.Target, pinger healthcheck.Pinger) (healthcheck.Usecase, chan struct{}) {
 	sn := newStorageNotifier()
 
-	return healthcheck.New(context.Background(), initModels, num_threads, pinger, sn), sn.notify
+	tgtMdls := make([]model.TargetRequest, len(initModels))
+	for i, mdl := range initModels {
+		tgtMdls[i] = model.TargetRequest{URL: mdl.URL, Period: mdl.Period}
+	}
+	return healthcheck.New(context.Background(), tgtMdls, num_threads, pinger, sn), sn.notify
 }
 
 var targets = []model.Target{

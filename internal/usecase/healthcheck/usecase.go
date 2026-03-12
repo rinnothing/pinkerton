@@ -39,7 +39,7 @@ type usecaseImplementation struct {
 	st Storage
 }
 
-func New(ctx context.Context, initModels []model.Target, threads int, tester Pinger, storage Storage) *usecaseImplementation {
+func New(ctx context.Context, initModels []model.TargetRequest, threads int, tester Pinger, storage Storage) *usecaseImplementation {
 	impl := usecaseImplementation{
 		mx: new(sync.RWMutex),
 		em: newEmitter(),

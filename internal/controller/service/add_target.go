@@ -6,15 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/rinnothing/pinkerton/internal/model"
 )
-
-type targetRequest struct {
-	URL    string        `json:"url"`
-	Period time.Duration `json:"period"`
-}
 
 func (ctr *controller) AddTarget(resp http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
@@ -22,7 +16,7 @@ func (ctr *controller) AddTarget(resp http.ResponseWriter, req *http.Request) {
 	dec := json.NewDecoder(req.Body)
 	dec.DisallowUnknownFields()
 
-	var tgtReq targetRequest
+	var tgtReq model.TargetRequest
 	err := dec.Decode(&tgtReq)
 	if err != nil {
 		badRequest(resp, "can't decode request")

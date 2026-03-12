@@ -15,7 +15,7 @@ func (ctr *controller) UpdateTarget(resp http.ResponseWriter, req *http.Request)
 	dec := json.NewDecoder(req.Body)
 	dec.DisallowUnknownFields()
 
-	var tgtReq targetRequest
+	var tgtReq model.TargetRequest
 	err := dec.Decode(&tgtReq)
 	if err != nil {
 		badRequest(resp, "can't decode request")

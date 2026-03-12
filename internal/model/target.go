@@ -10,3 +10,8 @@ type Target struct {
 	LastResponse time.Time     `json:"last_response"`
 	Period       time.Duration `json:"period"`
 }
+
+type TargetRequest struct {
+	URL    string        `json:"url"`
+	Period time.Duration `json:"period"`
+}
