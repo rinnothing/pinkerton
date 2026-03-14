@@ -16,6 +16,8 @@ type Usecase interface {
 	RemoveTarget(url string) error
 
 	GetTarget(url string) (*model.Target, error)
+
+	GetAllTargets() []*model.Target
 }
 
 var _ Usecase = &usecaseImplementation{}
@@ -29,8 +31,9 @@ type Storage interface {
 	StoreStatus(url string, status int)
 	AddParams(url string, period time.Duration) error    // returns model.ErrUrlExists if url already exists
 	UpdateParams(url string, period time.Duration) error // returns model.ErrUrlNotExists if url doesn't exist
-	GetModel(url string) (*model.Target, error)          // return model.ErrUrlNotExists if url doesn't exist
-	RemoveModel(url string) error                        // returns model.ErrUrlNotExists if url doesn't exist
+	GetTarget(url string) (*model.Target, error)         // return model.ErrUrlNotExists if url doesn't exist
+	GetAllTargets() []*model.Target
+	RemoveTarget(url string) error // returns model.ErrUrlNotExists if url doesn't exist
 }
 
 type usecaseImplementation struct {
@@ -86,7 +89,7 @@ func (u *usecaseImplementation) GetTarget(url string) (*model.Target, error) {
 	u.mx.RLock()
 	defer u.mx.RUnlock()
 
-	mdl, err := u.st.GetModel(url)
+	mdl, err := u.st.GetTarget(url)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +97,19 @@ func (u *usecaseImplementation) GetTarget(url string) (*model.Target, error) {
 	return mdl, nil
 }
 
+func (u *usecaseImplementation) GetAllTargets() []*model.Target {
+	u.mx.RLock()
+	defer u.mx.RUnlock()
+
+	return u.st.GetAllTargets()
+}
+
 // RemoveTarget implements Usecase.
 func (u *usecaseImplementation) RemoveTarget(url string) error {
 	u.mx.Lock()
 	defer u.mx.Unlock()
 
-	err := u.st.RemoveModel(url)
+	err := u.st.RemoveTarget(url)
 	if err != nil {
 		return err
 	}

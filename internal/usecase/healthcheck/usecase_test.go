@@ -3,6 +3,8 @@ package healthcheck_test
 import (
 	"context"
 	"errors"
+	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -114,6 +116,39 @@ func TestAddTarget(t *testing.T) {
 	err = e.AddTarget(&targets[0])
 	if !errors.Is(err, model.ErrUrlExists) {
 		t.Fatal("adding duplicate target should result in error")
+	}
+}
+
+func TestGetAllTargets(t *testing.T) {
+	t.Parallel()
+
+	e, _ := newHealthcheck([]model.Target{}, &constantPinger{code: 200})
+
+	addedTargets := make([]*model.Target, len(targets))
+	for i, tgt := range targets {
+		err := e.AddTarget(&tgt)
+		if err != nil {
+			t.Fatalf("adding new target shouldn't result in error %s", err)
+		}
+		addedTargets[i] = &tgt
+	}
+
+	tgtCmp := func(a, b *model.Target) int {
+		return strings.Compare(a.URL, b.URL)
+	}
+
+	tgts := e.GetAllTargets()
+
+	slices.SortFunc(tgts, tgtCmp)
+	slices.SortFunc(addedTargets, tgtCmp)
+
+	if len(addedTargets) != len(tgts) {
+		t.Fatalf("lengths of target lists should be equal but added is %d and read is %d", len(addedTargets), len(tgts))
+	}
+	for i := range addedTargets {
+		if *addedTargets[i] != *tgts[i] {
+			t.Errorf("added and read targets should be equal, but they are %v and %v", *addedTargets[i], *tgts[i])
+		}
 	}
 }
 

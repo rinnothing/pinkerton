@@ -64,7 +64,7 @@ func (s *storage) UpdateParams(url string, period time.Duration) error {
 	return nil
 }
 
-func (s *storage) GetModel(url string) (*model.Target, error) {
+func (s *storage) GetTarget(url string) (*model.Target, error) {
 	s.paramsMx.RLock()
 	defer s.paramsMx.RUnlock()
 
@@ -87,7 +87,30 @@ func (s *storage) GetModel(url string) (*model.Target, error) {
 	}, nil
 }
 
-func (s *storage) RemoveModel(url string) error {
+func (s *storage) GetAllTargets() []*model.Target {
+	s.paramsMx.RLock()
+	defer s.paramsMx.RUnlock()
+
+	var targets []*model.Target
+	for url, period := range s.paramsMap {
+		var status statusAndTime
+		val, ok := s.statusMap.Load(url)
+		if ok {
+			status = val.(statusAndTime)
+		}
+
+		targets = append(targets, &model.Target{
+			URL:          url,
+			LastStatus:   status.status,
+			LastResponse: status.moment,
+			Period:       period,
+		})
+	}
+
+	return targets
+}
+
+func (s *storage) RemoveTarget(url string) error {
 	s.paramsMx.Lock()
 	defer s.paramsMx.Unlock()
 

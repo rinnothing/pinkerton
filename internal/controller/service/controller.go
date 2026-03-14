@@ -25,10 +25,12 @@ func New(uc healthcheck.Usecase) *controller {
 
 func (ctr *controller) registerEndpoints() {
 	ctr.HandleFunc("GET /targets/{url}", ctr.GetTarget)
-	//todo: add get for all targets
+	ctr.HandleFunc("GET /targets/", ctr.GetAllTargets)
 	ctr.HandleFunc("POST /targets/", ctr.AddTarget)
 	ctr.HandleFunc("PUT /targets/", ctr.UpdateTarget)
 	ctr.HandleFunc("DELETE /targets/{url}", ctr.RemoveTarget)
+
+	ctr.HandleFunc("GET /health/", ctr.Health)
 }
 
 func badRequest(resp http.ResponseWriter, comment string) {
