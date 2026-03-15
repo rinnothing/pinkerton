@@ -28,15 +28,16 @@ func errUnexpected(code int) error {
 	return fmt.Errorf("%w: %d", ErrUnexpected, code)
 }
 
-func New(client http.Client, hostname, port string, timeout time.Duration) *Client {
+func New(client *http.Client, hostname, port string, timeout time.Duration) *Client {
 	return &Client{
-		client: client,
-		path:   net.JoinHostPort(hostname, port),
+		client:  client,
+		path:    "http://" + net.JoinHostPort(hostname, port),
+		timeout: timeout,
 	}
 }
 
 type Client struct {
-	client  http.Client
+	client  *http.Client
 	path    string
 	timeout time.Duration
 }

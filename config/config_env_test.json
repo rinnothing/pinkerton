@@ -1,0 +1,20 @@
+{
+  "http": {
+    "host": "somehost"
+  },
+  "healthcheck": {
+    "threads": 4,
+    "timeout": "10s"
+  },
+  "init_models": [
+    { 
+      "url": "url1",
+      "period": "30s"
+    },
+    {
+      "url": "url2",
+      "period": "5s"
+    }
+  ],
+  "shutdown_timeout": "1m"
+}

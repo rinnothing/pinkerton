@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/rinnothing/pinkerton/config"
 	"github.com/rinnothing/pinkerton/internal/controller"
 )
@@ -8,5 +10,5 @@ import (
 func main() {
 	cfg := config.ReadConfig("config/server.json")
 
-	controller.Run(cfg)
+	controller.Run(context.Background(), cfg)
 }

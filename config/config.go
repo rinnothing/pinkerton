@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	config_internal "github.com/rinnothing/pinkerton/config/internal"
@@ -53,6 +54,15 @@ func ReadConfig(path string) *Config {
 	models := make([]TargetRequest, len(cfg_int.InitModels))
 	for i, mdl := range cfg_int.InitModels {
 		models[i] = parseModel(mdl)
+	}
+
+	if cfg_int.Port == "" {
+		port, ok := os.LookupEnv("PORT")
+		if !ok {
+			panic("no port provided")
+		}
+
+		cfg_int.Port = port
 	}
 
 	return &Config{

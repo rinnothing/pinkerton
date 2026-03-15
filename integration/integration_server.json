@@ -1,0 +1,11 @@
+{
+  "http": {
+    "port": "3233",
+    "host": "localhost"
+  },
+  "healthcheck": {
+    "threads": 4,
+    "timeout": "1s"
+  },
+  "shutdown_timeout": "5s"
+}

@@ -15,8 +15,8 @@ import (
 	"github.com/rinnothing/pinkerton/internal/usecase/healthcheck"
 )
 
-func Run(cfg *config.Config) {
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+func Run(ctx context.Context, cfg *config.Config) {
+	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	pngr := pinger.New(ctx, cfg.HealthCheck.Timeout)
