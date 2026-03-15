@@ -1,50 +1,70 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
+	config_internal "github.com/rinnothing/pinkerton/config/internal"
 	"github.com/rinnothing/pinkerton/internal/model"
 )
 
 type (
 	Config struct {
-		HTTP            `json:"http"`
-		HealthCheck     `json:"healthcheck"`
-		InitModels      `json:"init_models"`
-		ShutdownTimeout time.Duration `json:"shutdown_timeout"`
+		HTTP
+		HealthCheck
+		InitModels
+		ShutdownTimeout time.Duration
 	}
 
 	HTTP struct {
-		Host string `json:"host"`
-		Port string `json:"port"`
+		Host string
+		Port string
 	}
 
 	HealthCheck struct {
-		Threads int           `json:"threads"`
-		Timeout time.Duration `json:"timeout"`
+		Threads int
+		Timeout time.Duration
 	}
 
-	InitModels []model.TargetRequest
+	TargetRequest = model.TargetRequest
+
+	InitModels []TargetRequest
 )
 
+func parseDuration(s string) time.Duration {
+	tm, err := time.ParseDuration(s)
+	if err != nil {
+		panic(fmt.Sprintf("duration string %s is in wrong format: %s", s, err))
+	}
+
+	return tm
+}
+
+func parseModel(req config_internal.TargetRequest) TargetRequest {
+	return TargetRequest{
+		URL:    req.URL,
+		Period: parseDuration(req.Period),
+	}
+}
+
 func ReadConfig(path string) *Config {
-	f, err := os.Open(path)
-	if err != nil {
-		panic(fmt.Sprintf("can't open configuration file %s: %s", path, err))
-	}
-	defer f.Close()
+	cfg_int := config_internal.ReadConfig(path)
 
-	dec := json.NewDecoder(f)
-	dec.DisallowUnknownFields()
-
-	var cfg *Config
-	err = dec.Decode(cfg)
-	if err != nil {
-		panic(fmt.Sprintf("can't decode configration file %s: %s", path, err))
+	models := make([]TargetRequest, len(cfg_int.InitModels))
+	for i, mdl := range cfg_int.InitModels {
+		models[i] = parseModel(mdl)
 	}
 
-	return cfg
+	return &Config{
+		HTTP: HTTP{
+			Host: cfg_int.Host,
+			Port: cfg_int.Port,
+		},
+		HealthCheck: HealthCheck{
+			Threads: cfg_int.Threads,
+			Timeout: parseDuration(cfg_int.Timeout),
+		},
+		InitModels:      models,
+		ShutdownTimeout: parseDuration(cfg_int.ShutdownTimeout),
+	}
 }

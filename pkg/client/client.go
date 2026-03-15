@@ -15,9 +15,9 @@ import (
 	"github.com/rinnothing/pinkerton/internal/model"
 )
 
-type Target model.Target
+type Target = model.Target
 type Targets []*Target
-type TargetRequest model.TargetRequest
+type TargetRequest = model.TargetRequest
 
 var ErrUrlExists = model.ErrUrlExists
 var ErrUrlNotExists = model.ErrUrlNotExists
