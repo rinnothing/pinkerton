@@ -23,6 +23,11 @@ func (ctr *controller) AddTarget(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	err = checkRequest(resp, &tgtReq)
+	if err != nil {
+		return
+	}
+
 	err = ctr.uc.AddTarget(&model.Target{URL: tgtReq.URL, Period: tgtReq.Period})
 	if errors.Is(err, model.ErrUrlExists) {
 		statusConflict(resp, fmt.Sprintf("target with url %s already exists", tgtReq.URL))

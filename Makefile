@@ -13,3 +13,7 @@ clean-testcache:
 .PHONY: run
 run:
 	go run ./cmd/server
+
+# .PHONY: cli
+# cli:
+# 	go run ./cmd/cli

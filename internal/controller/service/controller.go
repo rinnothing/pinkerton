@@ -4,8 +4,11 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/rinnothing/pinkerton/internal/model"
 	"github.com/rinnothing/pinkerton/internal/usecase/healthcheck"
+	"github.com/rinnothing/pinkerton/pkg/checks"
 )
 
 type controller struct {
@@ -61,4 +64,30 @@ func statusConflict(resp http.ResponseWriter, comment string) {
 
 func statusOK(resp http.ResponseWriter) {
 	resp.WriteHeader(http.StatusOK)
+}
+
+func checkUrl(resp http.ResponseWriter, url string) error {
+	if err := checks.CheckUrl(url); err != nil {
+		badRequest(resp, err.Error())
+		return err
+	}
+	return nil
+}
+
+func checkPeriod(resp http.ResponseWriter, p time.Duration) error {
+	if err := checks.CheckPeriod(p); err != nil {
+		badRequest(resp, err.Error())
+		return err
+	}
+	return nil
+}
+
+func checkRequest(resp http.ResponseWriter, t *model.TargetRequest) error {
+	if err := checkUrl(resp, t.URL); err != nil {
+		return err
+	}
+	if err := checkPeriod(resp, t.Period); err != nil {
+		return err
+	}
+	return nil
 }

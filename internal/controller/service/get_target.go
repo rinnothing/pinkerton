@@ -30,6 +30,11 @@ func (ctr *controller) GetTarget(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	err = checkUrl(resp, url)
+	if err != nil {
+		return
+	}
+
 	mdl, err := ctr.uc.GetTarget(url)
 	if errors.Is(err, model.ErrUrlNotExists) {
 		notFound(resp)

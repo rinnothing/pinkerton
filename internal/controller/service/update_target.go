@@ -22,6 +22,11 @@ func (ctr *controller) UpdateTarget(resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	err = checkRequest(resp, &tgtReq)
+	if err != nil {
+		return
+	}
+
 	err = ctr.uc.UpdateTarget(&model.Target{URL: tgtReq.URL, Period: tgtReq.Period})
 	if errors.Is(err, model.ErrUrlNotExists) {
 		notFound(resp)

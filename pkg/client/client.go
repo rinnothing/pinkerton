@@ -23,9 +23,18 @@ var ErrUrlExists = model.ErrUrlExists
 var ErrUrlNotExists = model.ErrUrlNotExists
 var ErrInternal = errors.New("internal server error")
 var ErrUnexpected = errors.New("unexpected return code")
+var ErrBadRequest = errors.New("bad request")
 
 func errUnexpected(code int) error {
 	return fmt.Errorf("%w: %d", ErrUnexpected, code)
+}
+
+func errBadRequest(r io.ReadCloser) error {
+	body, err := io.ReadAll(r)
+	if err != nil {
+		return fmt.Errorf("can't read bad request answer body: %w", err)
+	}
+	return fmt.Errorf("%w: %s", ErrBadRequest, string(body))
 }
 
 func New(client *http.Client, hostname, port string, timeout time.Duration) *Client {
@@ -108,6 +117,8 @@ func (c *Client) GetTarget(ctx context.Context, targetUrl string) (*Target, erro
 		return nil, ErrUrlNotExists
 	case http.StatusInternalServerError:
 		return nil, ErrInternal
+	case http.StatusBadRequest:
+		return nil, errBadRequest(resp.Body)
 	default:
 		return nil, errUnexpected(resp.StatusCode)
 	}
@@ -140,6 +151,8 @@ func (c *Client) GetAllTargets(ctx context.Context) (Targets, error) {
 		break
 	case http.StatusInternalServerError:
 		return nil, ErrInternal
+	case http.StatusBadRequest:
+		return nil, errBadRequest(resp.Body)
 	default:
 		return nil, errUnexpected(resp.StatusCode)
 	}
@@ -179,6 +192,8 @@ func (c *Client) AddTarget(ctx context.Context, req *TargetRequest) error {
 		return ErrUrlExists
 	case http.StatusInternalServerError:
 		return ErrInternal
+	case http.StatusBadRequest:
+		return errBadRequest(resp.Body)
 	default:
 		return errUnexpected(resp.StatusCode)
 	}
@@ -213,6 +228,8 @@ func (c *Client) UpdateTarget(ctx context.Context, req *TargetRequest) error {
 		return ErrUrlNotExists
 	case http.StatusInternalServerError:
 		return ErrInternal
+	case http.StatusBadRequest:
+		return errBadRequest(resp.Body)
 	default:
 		return errUnexpected(resp.StatusCode)
 	}
@@ -242,6 +259,8 @@ func (c *Client) RemoveTarget(ctx context.Context, targetUrl string) error {
 		return ErrUrlNotExists
 	case http.StatusInternalServerError:
 		return ErrInternal
+	case http.StatusBadRequest:
+		return errBadRequest(resp.Body)
 	default:
 		return errUnexpected(resp.StatusCode)
 	}
@@ -269,6 +288,8 @@ func (c *Client) Health(ctx context.Context) error {
 		break
 	case http.StatusInternalServerError:
 		return ErrInternal
+	case http.StatusBadRequest:
+		return errBadRequest(resp.Body)
 	default:
 		return errUnexpected(resp.StatusCode)
 	}

@@ -29,6 +29,11 @@ func (ctr *controller) RemoveTarget(resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	err = checkUrl(resp, url)
+	if err != nil {
+		return
+	}
+
 	err = ctr.uc.RemoveTarget(url)
 	if errors.Is(err, model.ErrUrlNotExists) {
 		notFound(resp)

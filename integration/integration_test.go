@@ -102,8 +102,19 @@ func TestHappyPath(t *testing.T) {
 
 	err := cl.AddTarget(t.Context(), targets[0])
 	if !errors.Is(err, client.ErrUrlExists) {
-		t.Log(err)
 		t.Fatalf("shouldn't be able to add duplicate %s server to watchlist", targets[0].URL)
+	}
+
+	badReq := &client.TargetRequest{URL: "biba_and_boba.com", Period: time.Minute * 5}
+	err = cl.AddTarget(t.Context(), badReq)
+	if !errors.Is(err, client.ErrBadRequest) {
+		t.Fatalf("shouldn't be able to add bad url %s server to watchlist", badReq.URL)
+	}
+
+	badReq = &client.TargetRequest{URL: "http://google.com", Period: time.Minute * 0}
+	err = cl.AddTarget(t.Context(), badReq)
+	if !errors.Is(err, client.ErrBadRequest) {
+		t.Fatalf("shouldn't be able to add bad period %v server to watchlist", badReq.Period)
 	}
 
 	for _, tgt := range targets {
