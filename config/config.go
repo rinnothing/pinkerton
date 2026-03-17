@@ -15,6 +15,7 @@ type (
 		HealthCheck
 		InitModels
 		ShutdownTimeout time.Duration
+		Debug           bool
 	}
 
 	HTTP struct {
@@ -76,5 +77,6 @@ func ReadConfig(path string) *Config {
 		},
 		InitModels:      models,
 		ShutdownTimeout: parseDuration(cfg_int.ShutdownTimeout),
+		Debug:           cfg_int.Debug,
 	}
 }

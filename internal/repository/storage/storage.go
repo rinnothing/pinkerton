@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"log/slog"
 	"sync"
 	"time"
 
@@ -31,11 +32,14 @@ type statusAndTime struct {
 }
 
 func (s *storage) StoreStatus(url string, status int) {
-	s.statusMap.LoadOrStore(url, statusAndTime{
+	st := statusAndTime{
 		status: status,
 		// it won't be the latest time actually, because some stuck thread could put another thread with status before, but since we measure often it shouldn't be a big problem
 		moment: time.Now(),
-	})
+	}
+
+	slog.Debug("storing new status and time on url", "url", url, "status", st.status, "time", st.moment)
+	s.statusMap.Store(url, st)
 }
 
 func (s *storage) AddParams(url string, period time.Duration) error {
@@ -47,6 +51,7 @@ func (s *storage) AddParams(url string, period time.Duration) error {
 		return model.ErrUrlExists
 	}
 
+	slog.Debug("add params on url", "url", url, "period", period)
 	s.paramsMap[url] = period
 	return nil
 }
@@ -60,6 +65,7 @@ func (s *storage) UpdateParams(url string, period time.Duration) error {
 		return model.ErrUrlNotExists
 	}
 
+	slog.Debug("update params on url", "url", url, "period", period)
 	s.paramsMap[url] = period
 	return nil
 }
@@ -79,6 +85,7 @@ func (s *storage) GetTarget(url string) (*model.Target, error) {
 		status = val.(statusAndTime)
 	}
 
+	slog.Debug("return info on url", "url", url, "period", period, "last status", status.status, "last response", status.moment)
 	return &model.Target{
 		URL:          url,
 		LastStatus:   status.status,
@@ -107,6 +114,7 @@ func (s *storage) GetAllTargets() []*model.Target {
 		})
 	}
 
+	slog.Debug("return info on all targets")
 	return targets
 }
 
@@ -119,6 +127,7 @@ func (s *storage) RemoveTarget(url string) error {
 		return model.ErrUrlNotExists
 	}
 
+	slog.Debug("remove target by url", "url", url)
 	delete(s.paramsMap, url)
 	return nil
 }

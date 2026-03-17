@@ -12,6 +12,7 @@ type (
 		HealthCheck     `json:"healthcheck"`
 		InitModels      `json:"init_models"`
 		ShutdownTimeout string `json:"shutdown_timeout"`
+		Debug           bool   `json:"debug"`
 	}
 
 	HTTP struct {
