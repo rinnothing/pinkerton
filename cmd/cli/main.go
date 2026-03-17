@@ -54,6 +54,11 @@ func main() {
 
 	flag.Parse()
 
+	if call == "" {
+		fmt.Fprint(os.Stderr, "call type should be specified")
+		os.Exit(1)
+	}
+
 	if _, ok := urlCalls[call]; ok {
 		err := checks.CheckUrl(*tgtUrl)
 		if err != nil {

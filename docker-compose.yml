@@ -1,0 +1,10 @@
+services:
+  pinkerton:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rinnothing/pinkerton
+    ports:
+      - ${PINKERTON_PORT}:3233
+    env_file:
+      - .env
